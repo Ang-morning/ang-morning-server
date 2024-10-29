@@ -1,6 +1,7 @@
 package users
 
 import (
+	"angmorning.com/internal/libs/oauth"
 	"angmorning.com/internal/services/users/application"
 	"angmorning.com/internal/services/users/infrastructure"
 	"angmorning.com/internal/services/users/presentation"
@@ -8,6 +9,7 @@ import (
 )
 
 var UserModule = wire.NewSet(
+	oauth.NewFactory,
 	infrastructure.New,
 	application.New,
 	presentation.New,

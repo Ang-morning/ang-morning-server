@@ -12,11 +12,13 @@ import (
 )
 
 type User struct {
-	CreatedAt time.Time    `json:"createdAt"`
-	UpdatedAt time.Time    `json:"updatedAt"`
-	DeletedAt sql.NullTime `json:"deletedAt"`
-	ID        uuid.UUID    `json:"id"`
-	Email     string       `json:"email"`
-	Nickname  string       `json:"nickname"`
-	Providers []string     `json:"providers"`
+	CreatedAt        time.Time      `json:"createdAt"`
+	UpdatedAt        time.Time      `json:"updatedAt"`
+	DeletedAt        sql.NullTime   `json:"deletedAt"`
+	ID               uuid.UUID      `json:"id"`
+	Email            string         `json:"email"`
+	Nickname         string         `json:"nickname"`
+	ProfileImageUrl  sql.NullString `json:"profileImageUrl"`
+	Providers        []string       `json:"providers"`
+	LastProviderType string         `json:"lastProviderType"`
 }

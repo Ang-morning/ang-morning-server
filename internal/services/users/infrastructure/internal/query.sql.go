@@ -7,46 +7,11 @@ package internal
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
-
-const create = `-- name: Create :one
-INSERT INTO "user" (
-  "createdAt", "updatedAt", id, email, nickname, providers
-) VALUES (
-  NOW(), NOW(), $1, $2, $3, $4
-)
-RETURNING "createdAt", "updatedAt", "deletedAt", id, email, nickname, providers
-`
-
-type CreateParams struct {
-	ID        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
-	Nickname  string    `json:"nickname"`
-	Providers []string  `json:"providers"`
-}
-
-func (q *Queries) Create(ctx context.Context, arg CreateParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, create,
-		arg.ID,
-		arg.Email,
-		arg.Nickname,
-		pq.Array(arg.Providers),
-	)
-	var i User
-	err := row.Scan(
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-		&i.ID,
-		&i.Email,
-		&i.Nickname,
-		pq.Array(&i.Providers),
-	)
-	return i, err
-}
 
 const delete = `-- name: Delete :exec
 UPDATE "user" SET "deletedAt" = NOW()
@@ -58,8 +23,29 @@ func (q *Queries) Delete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const findByEmail = `-- name: FindByEmail :one
+SELECT "createdAt", "updatedAt", "deletedAt", id, email, nickname, "profileImageUrl", providers, "lastProviderType" FROM "user" WHERE email = $1
+`
+
+func (q *Queries) FindByEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRowContext(ctx, findByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.ID,
+		&i.Email,
+		&i.Nickname,
+		&i.ProfileImageUrl,
+		pq.Array(&i.Providers),
+		&i.LastProviderType,
+	)
+	return i, err
+}
+
 const findOne = `-- name: FindOne :one
-SELECT "createdAt", "updatedAt", "deletedAt", id, email, nickname, providers FROM "user" WHERE id = $1
+SELECT "createdAt", "updatedAt", "deletedAt", id, email, nickname, "profileImageUrl", providers, "lastProviderType" FROM "user" WHERE id = $1
 `
 
 func (q *Queries) FindOne(ctx context.Context, id uuid.UUID) (User, error) {
@@ -72,13 +58,15 @@ func (q *Queries) FindOne(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.ID,
 		&i.Email,
 		&i.Nickname,
+		&i.ProfileImageUrl,
 		pq.Array(&i.Providers),
+		&i.LastProviderType,
 	)
 	return i, err
 }
 
 const list = `-- name: List :many
-SELECT "createdAt", "updatedAt", "deletedAt", id, email, nickname, providers FROM "user" WHERE "deletedAt" IS NULL
+SELECT "createdAt", "updatedAt", "deletedAt", id, email, nickname, "profileImageUrl", providers, "lastProviderType" FROM "user" WHERE "deletedAt" IS NULL
 `
 
 func (q *Queries) List(ctx context.Context) ([]User, error) {
@@ -97,7 +85,9 @@ func (q *Queries) List(ctx context.Context) ([]User, error) {
 			&i.ID,
 			&i.Email,
 			&i.Nickname,
+			&i.ProfileImageUrl,
 			pq.Array(&i.Providers),
+			&i.LastProviderType,
 		); err != nil {
 			return nil, err
 		}
@@ -110,4 +100,52 @@ func (q *Queries) List(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const save = `-- name: Save :one
+INSERT INTO "user" (
+  "createdAt", "updatedAt", id, email, nickname, "profileImageUrl", providers,"lastProviderType"
+) VALUES (
+  NOW(), NOW(), $1, $2, $3, $4 ,$5, $6
+) ON CONFLICT ("email") DO UPDATE
+SET 
+  "updatedAt" = NOW(),
+  nickname = EXCLUDED.nickname, 
+  "profileImageUrl"=EXCLUDED."profileImageUrl", 
+  providers = EXCLUDED.providers,
+  "lastProviderType"=EXCLUDED."lastProviderType"
+RETURNING "createdAt", "updatedAt", "deletedAt", id, email, nickname, "profileImageUrl", providers, "lastProviderType"
+`
+
+type SaveParams struct {
+	ID               uuid.UUID      `json:"id"`
+	Email            string         `json:"email"`
+	Nickname         string         `json:"nickname"`
+	ProfileImageUrl  sql.NullString `json:"profileImageUrl"`
+	Providers        []string       `json:"providers"`
+	LastProviderType string         `json:"lastProviderType"`
+}
+
+func (q *Queries) Save(ctx context.Context, arg SaveParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, save,
+		arg.ID,
+		arg.Email,
+		arg.Nickname,
+		arg.ProfileImageUrl,
+		pq.Array(arg.Providers),
+		arg.LastProviderType,
+	)
+	var i User
+	err := row.Scan(
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.ID,
+		&i.Email,
+		&i.Nickname,
+		&i.ProfileImageUrl,
+		pq.Array(&i.Providers),
+		&i.LastProviderType,
+	)
+	return i, err
 }

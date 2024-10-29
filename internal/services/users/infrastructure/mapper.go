@@ -9,3 +9,11 @@ func providerTypeToString(providers []domain.ProviderType) []string {
 	}
 	return converted
 }
+
+func stringToProviderType(providers []string) []domain.ProviderType {
+	converted := make([]domain.ProviderType, len(providers))
+	for i, p := range providers {
+		converted[i] = domain.ProviderType(p)
+	}
+	return converted
+}
