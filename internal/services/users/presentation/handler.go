@@ -1,7 +1,10 @@
 package presentation
 
 import (
+	"fmt"
+
 	"angmorning.com/internal/services/users/application"
+	"angmorning.com/internal/services/users/command"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,5 +24,10 @@ func (it *UserHandler) Router(r *gin.RouterGroup) {
 }
 
 func (it *UserHandler) oAuth(c *gin.Context) {
-	it.userService.OAuth()
+	var command command.OauthCommand
+	if err := c.BindJSON(&command); err != nil {
+		fmt.Println(err)
+	}
+
+	it.userService.OAuth(command)
 }
