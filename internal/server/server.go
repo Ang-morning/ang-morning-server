@@ -1,6 +1,7 @@
 package server
 
 import (
+	user "angmorning.com/internal/services/users/presentation"
 	"github.com/gin-gonic/gin"
 )
 
@@ -8,11 +9,17 @@ type Server struct {
 	engine *gin.Engine
 }
 
-func NewServer(healthCheckHandler *HealthCheckHandler) *Server {
+func NewServer(
+	healthCheckHandler *HealthCheckHandler,
+	userHandler *user.UserHandler,
+) *Server {
 	engine := gin.Default()
 
-	// 헬스 체크 엔드포인트 등록
+	// routing
 	engine.GET("/health", healthCheckHandler.check)
+
+	userGroup := engine.Group("/users")
+	userHandler.Router(userGroup)
 
 	return &Server{
 		engine: engine,

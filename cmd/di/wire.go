@@ -1,14 +1,16 @@
 //go:build wireinject
 // +build wireinject
 
-package wire
+package di
 
 import (
+	"angmorning.com/internal/libs/db"
 	"angmorning.com/internal/server"
+	"angmorning.com/internal/services/users"
 	"github.com/google/wire"
 )
 
 func InitializeServer() (*server.Server, error) {
-	wire.Build(server.ProviderSet)
+	wire.Build(db.InitDb, users.UserModule, server.ProviderSet)
 	return &server.Server{}, nil
 }
