@@ -1,8 +1,7 @@
 package application
 
 import (
-	"fmt"
-
+	httpError "angmorning.com/internal/libs/http/http-error"
 	"angmorning.com/internal/libs/oauth"
 	"angmorning.com/internal/services/users/command"
 	User "angmorning.com/internal/services/users/domain"
@@ -21,21 +20,33 @@ func New(userRepository *infrastructure.UserRepository, oauthFactory *oauth.Oaut
 	}
 }
 
-func (it *UserService) OAuth(command command.OauthCommand) {
+func (it *UserService) OAuth(command command.OauthCommand) (*User.User, error) {
 	client := it.oauthFactory.GetClient(User.ProviderKAKAO)
-	token := client.GetToken(command.Code)
-	userInfo := client.GetUserInfo(token)
+	token, err := client.GetToken(command.Code)
+	if err != nil {
+		return nil, httpError.Wrap(err)
+	}
 
-	fmt.Println("@@@", userInfo)
-	user := it.userRepository.FindByEmail(userInfo.Email)
-	fmt.Println("!!!!", user)
+	userInfo, err := client.GetUserInfo(token)
+	if err != nil {
+		return nil, httpError.Wrap(err)
+	}
+
+	user, err := it.userRepository.FindByEmail(userInfo.Email)
+	if err != nil {
+		return nil, httpError.Wrap(err)
+	}
+
 	if user == nil {
 		user = User.Of(userInfo.Nickname, userInfo.Email, userInfo.ProfileImageUrl, []User.ProviderType{command.Provider})
 	} else {
 		user.SignIn(command.Provider)
 	}
 
-	fmt.Println("###", user)
+	user, err = it.userRepository.Save(user)
+	if err != nil {
+		return nil, httpError.Wrap(err)
+	}
 
-	it.userRepository.Save(user)
+	return user, nil
 }

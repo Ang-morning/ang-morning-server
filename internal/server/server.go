@@ -1,6 +1,7 @@
 package server
 
 import (
+	"angmorning.com/internal/middlewares"
 	user "angmorning.com/internal/services/users/presentation"
 	"github.com/gin-gonic/gin"
 )
@@ -15,6 +16,7 @@ func NewServer(
 ) *Server {
 	engine := gin.Default()
 
+	engine.Use(middlewares.ErrorHandler)
 	// routing
 	engine.GET("/health", healthCheckHandler.check)
 
