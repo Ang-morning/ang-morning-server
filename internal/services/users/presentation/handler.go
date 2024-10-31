@@ -1,8 +1,8 @@
 package presentation
 
 import (
-	"fmt"
-
+	httpCode "angmorning.com/internal/libs/http/http-code"
+	httpError "angmorning.com/internal/libs/http/http-error"
 	"angmorning.com/internal/services/users/application"
 	"angmorning.com/internal/services/users/command"
 	"github.com/gin-gonic/gin"
@@ -26,8 +26,15 @@ func (it *UserHandler) Router(r *gin.RouterGroup) {
 func (it *UserHandler) oAuth(c *gin.Context) {
 	var command command.OauthCommand
 	if err := c.BindJSON(&command); err != nil {
-		fmt.Println(err)
+		c.Error(httpError.New(httpCode.BadRequest, err.Error(), ""))
 	}
 
-	it.userService.OAuth(command)
+	_, err := it.userService.OAuth(command)
+	if err != nil {
+		c.Error(httpError.Wrap(err))
+		return
+	}
+
+	// TODO: response
+	c.JSON(httpCode.Created.Code, nil)
 }

@@ -9,6 +9,8 @@ import (
 	"net/url"
 
 	"angmorning.com/internal/config"
+	httpCode "angmorning.com/internal/libs/http/http-code"
+	httpError "angmorning.com/internal/libs/http/http-error"
 )
 
 type KakaoOauthClient struct {
@@ -21,7 +23,7 @@ func newKakaoClient() *KakaoOauthClient {
 	}
 }
 
-func (kakao *KakaoOauthClient) GetToken(code string) string {
+func (kakao *KakaoOauthClient) GetToken(code string) (string, error) {
 	data := url.Values{}
 	data.Set("grant_type", "authorization_code")
 	data.Set("client_id", config.Oauth.Kakao.ClientId)
@@ -31,44 +33,56 @@ func (kakao *KakaoOauthClient) GetToken(code string) string {
 
 	res, err := kakao.httpClient.Post("https://kauth.kakao.com/oauth/token", "application/x-www-form-urlencoded", bytes.NewBufferString(data.Encode()))
 	if err != nil {
-		fmt.Println(err)
+		return "", httpError.New(httpCode.Unauthorized, err.Error(), "인증에 실패했습니다. 잠시 후 다시 시도해주세요.")
 	}
 
 	if res.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			return "", httpError.New(httpCode.Unauthorized, err.Error(), "인증에 실패했습니다. 잠시 후 다시 시도해주세요.")
+		}
 
-		fmt.Println(string(body))
+		return "", httpError.New(httpCode.Unauthorized, string(body), "인증에 실패했습니다. 잠시 후 다시 시도해주세요.")
 	}
 
 	var result struct {
 		AccessToken string `json:"access_token"`
 	}
-	json.NewDecoder(res.Body).Decode(&result)
 
-	return result.AccessToken
+	err = json.NewDecoder(res.Body).Decode(&result)
+	if err != nil {
+		return "", httpError.New(httpCode.Unauthorized, err.Error(), "인증에 실패했습니다. 잠시 후 다시 시도해주세요.")
+	}
+
+	return result.AccessToken, nil
 }
 
-func (kakao *KakaoOauthClient) GetUserInfo(accessToken string) *OauthUserInfo {
+func (kakao *KakaoOauthClient) GetUserInfo(accessToken string) (*OauthUserInfo, error) {
 	req, err := http.NewRequest("GET", "https://kapi.kakao.com/v2/user/me", nil)
 	if err != nil {
-		fmt.Println(err)
+		return nil, httpError.New(httpCode.Unauthorized, err.Error(), "인증에 실패했습니다. 잠시 후 다시 시도해주세요.")
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 
 	res, err := kakao.httpClient.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		return nil, httpError.New(httpCode.Unauthorized, err.Error(), "인증에 실패했습니다. 잠시 후 다시 시도해주세요.")
 	}
 	body, _ := io.ReadAll(res.Body)
 
 	if res.StatusCode != http.StatusOK {
-		fmt.Println("!!!", string(body))
+		return nil, httpError.New(httpCode.Unauthorized, string(body), "인증에 실패했습니다. 잠시 후 다시 시도해주세요.")
 	}
 
-	return kakao.parseUserInfo(body)
+	userInfo, err := kakao.parseUserInfo(body)
+	if err != nil {
+		return nil, httpError.Wrap(err)
+	}
+
+	return userInfo, nil
 }
 
-func (kakao *KakaoOauthClient) parseUserInfo(body []byte) *OauthUserInfo {
+func (kakao *KakaoOauthClient) parseUserInfo(body []byte) (*OauthUserInfo, error) {
 	var result struct {
 		KakaoAccount struct {
 			Profile struct {
@@ -80,7 +94,7 @@ func (kakao *KakaoOauthClient) parseUserInfo(body []byte) *OauthUserInfo {
 	}
 
 	if err := json.Unmarshal(body, &result); err != nil {
-		return nil
+		return nil, httpError.New(httpCode.Unauthorized, err.Error(), "인증에 실패했습니다. 잠시 후 다시 시도해주세요.")
 	}
 
 	userInfo := OauthUserInfo{
@@ -89,5 +103,5 @@ func (kakao *KakaoOauthClient) parseUserInfo(body []byte) *OauthUserInfo {
 		ProfileImageUrl: result.KakaoAccount.Profile.ProfileImageUrl,
 	}
 
-	return &userInfo
+	return &userInfo, nil
 }
