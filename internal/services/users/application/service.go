@@ -6,6 +6,7 @@ import (
 	"angmorning.com/internal/services/users/command"
 	User "angmorning.com/internal/services/users/domain"
 	"angmorning.com/internal/services/users/infrastructure"
+	"angmorning.com/internal/services/users/response"
 )
 
 type UserService struct {
@@ -20,7 +21,7 @@ func New(userRepository *infrastructure.UserRepository, oauthFactory *oauth.Oaut
 	}
 }
 
-func (it *UserService) OAuth(command command.OauthCommand) (*User.User, error) {
+func (it *UserService) OAuth(command command.OauthCommand) (*response.OAuthResponse, error) {
 	client := it.oauthFactory.GetClient(User.ProviderKAKAO)
 	token, err := client.GetToken(command.Code)
 	if err != nil {
@@ -48,5 +49,5 @@ func (it *UserService) OAuth(command command.OauthCommand) (*User.User, error) {
 		return nil, httpError.Wrap(err)
 	}
 
-	return user, nil
+	return &response.OAuthResponse{}, nil
 }

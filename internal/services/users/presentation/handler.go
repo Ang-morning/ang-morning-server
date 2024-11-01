@@ -3,6 +3,7 @@ package presentation
 import (
 	httpCode "angmorning.com/internal/libs/http/http-code"
 	httpError "angmorning.com/internal/libs/http/http-error"
+	httpResponse "angmorning.com/internal/libs/http/http-response"
 	"angmorning.com/internal/services/users/application"
 	"angmorning.com/internal/services/users/command"
 	"github.com/gin-gonic/gin"
@@ -29,12 +30,11 @@ func (it *UserHandler) oAuth(c *gin.Context) {
 		c.Error(httpError.New(httpCode.BadRequest, err.Error(), ""))
 	}
 
-	_, err := it.userService.OAuth(command)
+	res, err := it.userService.OAuth(command)
 	if err != nil {
 		c.Error(httpError.Wrap(err))
 		return
 	}
 
-	// TODO: response
-	c.JSON(httpCode.Created.Code, nil)
+	c.JSON(httpCode.Created.Code, httpResponse.Response{Data: res.AccessToken})
 }
