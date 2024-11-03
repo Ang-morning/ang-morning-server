@@ -11,7 +11,9 @@ type OauthClientFactory struct {
 func NewFactory() *OauthClientFactory {
 	return &OauthClientFactory{
 		clientMap: map[user.ProviderType]OauthClient{
-			user.ProviderKAKAO: newKakaoClient(),
+			user.ProviderKAKAO:  newKakaoClient(),
+			user.ProviderNAVER:  newNaverClient(),
+			user.ProviderGOOGLE: newGoogleClient(),
 		},
 	}
 }
