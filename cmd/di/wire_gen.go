@@ -10,7 +10,9 @@ import (
 	"angmorning.com/internal/libs/db"
 	"angmorning.com/internal/libs/oauth"
 	"angmorning.com/internal/server"
-	"angmorning.com/internal/services/users/application"
+	"angmorning.com/internal/services/auth/application"
+	infrastructure2 "angmorning.com/internal/services/auth/infrastructure"
+	application2 "angmorning.com/internal/services/users/application"
 	"angmorning.com/internal/services/users/infrastructure"
 	"angmorning.com/internal/services/users/presentation"
 )
@@ -22,7 +24,9 @@ func InitializeServer() (*server.Server, error) {
 	sqlDB := db.InitDb()
 	userRepository := infrastructure.New(sqlDB)
 	oauthClientFactory := oauth.NewFactory()
-	userService := application.New(userRepository, oauthClientFactory)
+	authRepository := infrastructure2.New(sqlDB)
+	authService := application.New(authRepository)
+	userService := application2.New(userRepository, oauthClientFactory, authService)
 	userHandler := presentation.New(userService)
 	serverServer := server.NewServer(healthCheckHandler, userHandler)
 	return serverServer, nil

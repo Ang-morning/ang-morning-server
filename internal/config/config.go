@@ -1,6 +1,8 @@
 package config
 
-import "os"
+import (
+	"os"
+)
 
 type OAuthProviderConfig struct {
 	BaseURL      string
@@ -16,15 +18,18 @@ type OauthConfig struct {
 }
 
 var (
-	IsProduction = os.Getenv("APP_ENV") == "production"
-	Port         = os.Getenv("PORT")
-	DbName       = os.Getenv("DB_NAME")
-	DbUser       = os.Getenv("DB_USER")
-	DbPassword   = os.Getenv("DB_PASSWORD")
-	DbHost       = os.Getenv("DB_HOST")
-	DbPort       = os.Getenv("DB_PORT")
-	Origin       = os.Getenv("ORIGIN")
-	Oauth        = OauthConfig{
+	IsProduction                 = os.Getenv("APP_ENV") == "production"
+	Port                         = os.Getenv("PORT")
+	DbName                       = os.Getenv("DB_NAME")
+	DbUser                       = os.Getenv("DB_USER")
+	DbPassword                   = os.Getenv("DB_PASSWORD")
+	DbHost                       = os.Getenv("DB_HOST")
+	DbPort                       = os.Getenv("DB_PORT")
+	Origin                       = os.Getenv("ORIGIN")
+	JWTSecret                    = os.Getenv("JWT_SECRET")
+	AccessTokenExpiredAfterHour  = os.Getenv("ACCESS_TOKEN_EXPIRED_AFTER_HOUR")
+	RefreshTokenExpiredAfterHour = os.Getenv("REFRESH_TOKEN_EXPIRED_AFTER_HOUR")
+	Oauth                        = OauthConfig{
 		Kakao: OAuthProviderConfig{
 			// BaseURL:      "https://kauth.kakao.com/oauth",
 			ClientId:     os.Getenv("KAKAO_CLIENT_ID"),

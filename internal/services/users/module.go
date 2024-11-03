@@ -8,7 +8,7 @@ import (
 	"github.com/google/wire"
 )
 
-var UserModule = wire.NewSet(
+var UserSet = wire.NewSet(
 	oauth.NewFactory,
 	infrastructure.New,
 	application.New,
