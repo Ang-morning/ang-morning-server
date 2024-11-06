@@ -12,6 +12,9 @@ import (
 	"angmorning.com/internal/server"
 	"angmorning.com/internal/services/auth/application"
 	infrastructure2 "angmorning.com/internal/services/auth/infrastructure"
+	application3 "angmorning.com/internal/services/hospitals/application"
+	infrastructure3 "angmorning.com/internal/services/hospitals/infrastructure"
+	presentation2 "angmorning.com/internal/services/hospitals/presentation"
 	application2 "angmorning.com/internal/services/users/application"
 	"angmorning.com/internal/services/users/infrastructure"
 	"angmorning.com/internal/services/users/presentation"
@@ -28,6 +31,9 @@ func InitializeServer() (*server.Server, error) {
 	authService := application.New(authRepository)
 	userService := application2.New(userRepository, oauthClientFactory, authService)
 	userHandler := presentation.New(userService)
-	serverServer := server.NewServer(healthCheckHandler, userHandler)
+	hospitalRepository := infrastructure3.New(sqlDB)
+	hospitalService := application3.New(hospitalRepository)
+	hospitalHandler := presentation2.New(hospitalService)
+	serverServer := server.NewServer(healthCheckHandler, userHandler, hospitalHandler)
 	return serverServer, nil
 }

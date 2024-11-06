@@ -1,6 +1,10 @@
 package domain
 
-import "github.com/google/uuid"
+import (
+	httpCode "angmorning.com/internal/libs/http/http-code"
+	httpError "angmorning.com/internal/libs/http/http-error"
+	"github.com/google/uuid"
+)
 
 type ProviderType string
 
@@ -19,11 +23,10 @@ type User struct {
 	LastProviderType ProviderType   `json:"lastProviderType"`
 }
 
-func Of(nickname string, email string, profileImageUrl string, providers []ProviderType) *User {
+func Of(nickname string, email string, profileImageUrl string, providers []ProviderType) (*User, error) {
 	uuid, err := uuid.NewV7()
 	if err != nil {
-		// TODO: error handling
-		panic(err)
+		return nil, httpError.New(httpCode.InternalServerError, "Failed to generate uuid.", "")
 	}
 	return &User{
 		Id:              uuid,
@@ -31,7 +34,7 @@ func Of(nickname string, email string, profileImageUrl string, providers []Provi
 		ProfileImageUrl: profileImageUrl,
 		Email:           email,
 		Providers:       providers,
-	}
+	}, nil
 }
 
 func (user *User) SignIn(provider ProviderType) {

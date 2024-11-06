@@ -42,7 +42,10 @@ func (it *UserService) OAuth(command command.OauthCommand, clientInfo string) (*
 	}
 
 	if user == nil {
-		user = User.Of(userInfo.Nickname, userInfo.Email, userInfo.ProfileImageUrl, []User.ProviderType{command.Provider})
+		user, err = User.Of(userInfo.Nickname, userInfo.Email, userInfo.ProfileImageUrl, []User.ProviderType{command.Provider})
+		if err != nil {
+			return nil, httpError.Wrap(err)
+		}
 	} else {
 		user.SignIn(command.Provider)
 	}
