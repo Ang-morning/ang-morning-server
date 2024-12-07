@@ -15,6 +15,9 @@ import (
 	application3 "angmorning.com/internal/services/hospitals/application"
 	infrastructure3 "angmorning.com/internal/services/hospitals/infrastructure"
 	presentation2 "angmorning.com/internal/services/hospitals/presentation"
+	application4 "angmorning.com/internal/services/reviews/application"
+	infrastructure4 "angmorning.com/internal/services/reviews/infrastructure"
+	presentation3 "angmorning.com/internal/services/reviews/presentation"
 	application2 "angmorning.com/internal/services/users/application"
 	"angmorning.com/internal/services/users/infrastructure"
 	"angmorning.com/internal/services/users/presentation"
@@ -34,6 +37,9 @@ func InitializeServer() (*server.Server, error) {
 	hospitalRepository := infrastructure3.New(sqlDB)
 	hospitalService := application3.New(hospitalRepository)
 	hospitalHandler := presentation2.New(hospitalService)
-	serverServer := server.NewServer(healthCheckHandler, userHandler, hospitalHandler)
+	reviewRepository := infrastructure4.New(sqlDB)
+	reviewService := application4.New(reviewRepository)
+	reviewHandler := presentation3.New(reviewService)
+	serverServer := server.NewServer(healthCheckHandler, userHandler, hospitalHandler, reviewHandler)
 	return serverServer, nil
 }
