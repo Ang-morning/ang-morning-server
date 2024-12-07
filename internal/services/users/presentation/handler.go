@@ -1,8 +1,6 @@
 package presentation
 
 import (
-	"fmt"
-
 	httpCode "angmorning.com/internal/libs/http/http-code"
 	httpError "angmorning.com/internal/libs/http/http-error"
 	httpResponse "angmorning.com/internal/libs/http/http-response"
@@ -38,7 +36,6 @@ func (it *UserHandler) oAuth(c *gin.Context) {
 		c.Error(httpError.Wrap(err))
 		return
 	}
-	fmt.Println("!!!", res.AccessToken)
 
 	c.JSON(httpCode.Created.Code, httpResponse.Response{Data: res.AccessToken})
 }
